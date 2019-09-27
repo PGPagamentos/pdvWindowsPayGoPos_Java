@@ -1,13 +1,11 @@
 package br.com.paygo;
 
-/**
- * Hello world!
- *
- */
 public class App 
 {
     public static void main( String[] args )
     {
-        System.out.println( "Hello World!" );
+        PTI pti = new PTI();
+        Thread ptiThread = new Thread(pti);
+        ptiThread.start();
     }
 }

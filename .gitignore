@@ -5,8 +5,7 @@ HELP.md
 !**/src/test/**
 
 ### Application stuff ###
-/Data/
-/Log/
+/PayGoPOS/
 
 ### STS ###
 .apt_generated
