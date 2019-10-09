@@ -56,4 +56,51 @@ class PTILib {
     void disconnect(byte[] terminalId, short powerDelay, ShortByReference ret) {
         libInterface.PTI_Disconnect(terminalId, powerDelay, ret);
     }
+
+    void getData(byte[] terminalId, byte[] promptMessage, byte[] format, short minLength, short maxLength,
+                 int startFromLeft, int alphanumericCharacters, int hasMask,
+                 short timeout, byte[] data, short startLine, ShortByReference ret) {
+        libInterface.PTI_GetData(terminalId, promptMessage, format, minLength, maxLength, 0,
+                0, 0, timeout, data, startLine, ret);
+    }
+
+    void startTransaction(byte[] terminalId, short operation, ShortByReference ret) {
+        libInterface.PTI_EFT_Start(terminalId, operation, ret);
+    }
+
+    void addParam(byte[] terminalId, short param, byte[] paramValue, ShortByReference ret) {
+        libInterface.PTI_EFT_AddParam(terminalId, param, paramValue, ret);
+    }
+
+    void executeTransaction(byte[] terminalId, ShortByReference ref) {
+        libInterface.PTI_EFT_Exec(terminalId, ref);
+    }
+
+    void printContent(byte[] terminalId, byte[] message, ShortByReference ret) {
+        libInterface.PTI_Print(terminalId, message, ret);
+    }
+
+    void printCodeBar(byte[] terminalId, byte[] code, short symbology, ShortByReference ret) {
+        libInterface.PTI_PrnSymbolCode(terminalId, code, symbology, ret);
+    }
+
+    void printEmptySpace(byte[] terminalId, ShortByReference ret) {
+        libInterface.PTI_PrnFeed(terminalId, ret);
+    }
+
+    void printReceipt(byte[] terminalId, short receiptCopies, ShortByReference ret) {
+        libInterface.PTI_EFT_PrintReceipt(terminalId, receiptCopies, ret);
+    }
+
+    void beep(byte[] terminalId, short beep, ShortByReference ret) {
+        libInterface.PTI_Beep(terminalId, beep, ret);
+    }
+
+    void confirmTransaction(byte[] terminalId, short status, ShortByReference ret) {
+        libInterface.PTI_EFT_Confirm(terminalId, status, ret);
+    }
+
+    void getInfo(byte[] terminalId, short info, short length, byte[] value, ShortByReference ret) {
+        libInterface.PTI_EFT_GetInfo(terminalId, info, length, value, ret);
+    }
 }

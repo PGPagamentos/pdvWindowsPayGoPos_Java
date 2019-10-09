@@ -1,9 +1,5 @@
 package br.com.paygo.interop;
 
-import br.com.paygo.enums.PTIBeep;
-import br.com.paygo.enums.PTICnf;
-import br.com.paygo.enums.PWInfo;
-import br.com.paygo.enums.PWOper;
 import com.sun.jna.Library;
 import com.sun.jna.ptr.ShortByReference;
 
@@ -24,9 +20,9 @@ public interface PTILibMap extends Library {
 
     void PTI_ClearKey(byte[] terminalId, ShortByReference ret);
 
-    void PTI_GetData(byte[] terminalId, String promptMessage, String format, short minLength, short maxLength,
-                     boolean startFromLeft, boolean alphanumericCharacters, boolean hasMask,
-                     short timeout, String data, short startLine, ShortByReference ret);
+    void PTI_GetData(byte[] terminalId, byte[] promptMessage, byte[] format, short minLength, short maxLength,
+                     int startFromLeft, int alphanumericCharacters, int hasMask,
+                     short timeout, byte[] data, short startLine, ShortByReference ret);
 
     void PTI_StartMenu(byte[] terminalId, ShortByReference ret);
 
@@ -34,23 +30,23 @@ public interface PTILibMap extends Library {
 
     void PTI_ExecMenu(byte[] terminalId, byte[] promptMessage, short timeout, ShortByReference selectedOptionIndex, ShortByReference ret);
 
-    void PTI_Beep(byte[] terminalId, PTIBeep beepType, ShortByReference ret);
+    void PTI_Beep(byte[] terminalId, short beepType, ShortByReference ret);
 
-    void PTI_Print(byte[] terminalId, String message, ShortByReference ret);
+    void PTI_Print(byte[] terminalId, byte[] message, ShortByReference ret);
 
     void PTI_PrnFeed(byte[] terminalId, ShortByReference ret);
 
-    void PTI_PrnSymbolCode(byte[] terminalId, String code, short codeSymbol, ShortByReference ret);
+    void PTI_PrnSymbolCode(byte[] terminalId, byte[] code, short codeSymbol, ShortByReference ret);
 
-    void PTI_EFT_Start(byte[] terminalId, PWOper operation, ShortByReference ret);
+    void PTI_EFT_Start(byte[] terminalId, short operation, ShortByReference ret);
 
-    void PTI_EFT_AddParam(byte[] terminalId, PWInfo param, String value, ShortByReference ret);
+    void PTI_EFT_AddParam(byte[] terminalId, short param, byte[] value, ShortByReference ret);
 
     void PTI_EFT_Exec(byte[] terminalId, ShortByReference ret);
 
-    void PTI_EFT_GetInfo(byte[] terminalId, PWInfo param, short bufferLength, String value, ShortByReference ret);
+    void PTI_EFT_GetInfo(byte[] terminalId, short param, short bufferLength, byte[] value, ShortByReference ret);
 
     void PTI_EFT_PrintReceipt(byte[] terminalId, short receiptCopies, ShortByReference ret);
 
-    void PTI_EFT_Confirm(byte[] terminalId, PTICnf cnf, ShortByReference ret);
+    void PTI_EFT_Confirm(byte[] terminalId, short cnf, ShortByReference ret);
 }
