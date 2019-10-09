@@ -50,12 +50,11 @@ public class UserInterface {
         clearLogButton.addActionListener(e -> logArea.setText(""));
 
         JPanel topPanel = new JPanel();
-        topPanel.setLayout(new GridLayout(2, 2));
-        topPanel.setBorder(new EmptyBorder(10, 10, 5, 10));
+        topPanel.setLayout(new GridLayout(1, 3));
+        topPanel.setBorder(new EmptyBorder(5, 0, 10, 0));
 
         topPanel.add(startButton);
         topPanel.add(stopButton);
-        topPanel.add(new JLabel("LOG:"));
         topPanel.add(clearLogButton);
 
         logArea.setLineWrap(true);

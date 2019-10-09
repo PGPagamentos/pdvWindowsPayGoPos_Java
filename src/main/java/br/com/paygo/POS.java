@@ -55,6 +55,8 @@ public class POS implements Runnable {
 
         LibFunctions.displayMessage(terminalId, "DESCONECTANDO POS", returnedCode);
 
+        userInterface.logInfo("...\nDESCONECTANDO (TERMINAL " + terminalId + ")\n...");
+
         LibFunctions.disconnect(terminalId, 5, returnedCode);
         userInterface.logInfo("=> PTI_Disconnect: " + returnedCode.getValue());
 
@@ -115,6 +117,8 @@ public class POS implements Runnable {
     private int menuOperations() {
         ShortByReference returnedCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
         ShortByReference optionSelected;
+
+        LibFunctions.clearKeys(terminalId, returnedCode);
 
         do {
             optionSelected = new ShortByReference((short)-1);
@@ -229,6 +233,7 @@ public class POS implements Runnable {
             }
         } else {
             userInterface.logInfo("Operação foi cancelada ou falhou");
+            userInterface.logInfo("CÓDIGO RETORNADO: " + returnedCode);
 
             LibFunctions.beep(terminalId, PTIBeep.ERROR, returnedCode);
         }
@@ -243,7 +248,9 @@ public class POS implements Runnable {
 
         userInterface.logInfo("=> PTI_EFT_Exec: " + returnedCode.getValue());
 
+        // Não retornou OK, vai para a confirmação. Pode existir alguma transação pendente ou com erro.
         if (returnedCode.getValue() != PTIRet.OK.getValue()) {
+            userInterface.logInfo("RETORNO DA OPERAÇÃO: " + returnedCode);
             confirmation();
         }
     }
@@ -301,15 +308,15 @@ public class POS implements Runnable {
 
         LibFunctions.clearKeys(terminalId, returnedCode);
 
-        LibFunctions.createMenu(terminalId, returnedCode);
-
-        LibFunctions.addMenuOption(terminalId, "PrintReceipt", returnedCode);
-        LibFunctions.addMenuOption(terminalId, "Display", returnedCode);
-        LibFunctions.addMenuOption(terminalId, "Print", returnedCode);
-        LibFunctions.addMenuOption(terminalId, "PrnSymbolcode", returnedCode);
-        LibFunctions.addMenuOption(terminalId, "Retornar", returnedCode);
-
         do {
+            LibFunctions.createMenu(terminalId, returnedCode);
+
+            LibFunctions.addMenuOption(terminalId, "PrintReceipt", returnedCode);
+            LibFunctions.addMenuOption(terminalId, "Display", returnedCode);
+            LibFunctions.addMenuOption(terminalId, "Print", returnedCode);
+            LibFunctions.addMenuOption(terminalId, "PrnSymbolcode", returnedCode);
+            LibFunctions.addMenuOption(terminalId, "Retornar", returnedCode);
+
             optionSelected = new ShortByReference((short)-1);
 
             LibFunctions.displayMenu(terminalId, "Selecione uma opcao:", 30, optionSelected, returnedCode);
@@ -345,7 +352,7 @@ public class POS implements Runnable {
 
                         LibFunctions.getData(terminalId, "TEXTO PARA IMPRIMIR\r", "@@@@@@",
                                 1, 6, false, true, false,
-                                30, printValue, 3, returnedCode);
+                                30, printValue, 2, returnedCode);
 
                         userInterface.logInfo("=> PTI_GetData: " + returnedCode.getValue());
                         userInterface.logInfo("TEXTO INFORMADO = " + Printer.format(printValue) + " (TERMINAL = " + Printer.format(terminalId) + ")");
@@ -436,6 +443,7 @@ public class POS implements Runnable {
      * Método responsável por executar o fluxo de confirmação de uma transação
      */
     private void confirmation() {
+        userInterface.logInfo("=== CONFIRMAÇÃO DE TRANSAÇÃO ===");
         ShortByReference returnedCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
         LibFunctions.clearKeys(terminalId, returnedCode);
         ShortByReference optionSelected = new ShortByReference((short) -1);
@@ -449,8 +457,10 @@ public class POS implements Runnable {
 
         if (optionSelected.getValue() == 0) {
             LibFunctions.confirmTransaction(terminalId, PTICnf.SUCCESS, returnedCode);
+            userInterface.logInfo("CONFIRMAÇÃO - SUCCESS: " + returnedCode);
         } else {
             LibFunctions.confirmTransaction(terminalId, PTICnf.OTHERERR, returnedCode);
+            userInterface.logInfo("CONFIRMAÇÃO - OTHERERR: " + returnedCode);
         }
     }
 
