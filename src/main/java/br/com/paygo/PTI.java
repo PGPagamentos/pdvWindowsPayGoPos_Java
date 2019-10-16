@@ -46,6 +46,8 @@ public class PTI implements Runnable {
 
             userInterface.logInfo("=> Init");
 
+            logApplicationInfo();
+
             if (returnedCode.getValue() == PTIRet.OK.getValue()) {
                 ShortByReference connectionCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
 
@@ -86,6 +88,17 @@ public class PTI implements Runnable {
         } catch (Throwable throwable) {
             throwable.printStackTrace();
         }
+    }
+
+    private void logApplicationInfo() {
+        userInterface.logInfo("\n======= INFO =======");
+        userInterface.logInfo("COMPANY: " + COMPANY);
+        userInterface.logInfo("VERSION: " + VERSION);
+        userInterface.logInfo("CAPABILITIES: " + CAPABILITIES);
+        userInterface.logInfo("WORKING DIR: " + WORKING_DIR);
+        userInterface.logInfo("PORT: " + PORT);
+        userInterface.logInfo("MAX TERMINALS: " + MAX_TERMINALS);
+        userInterface.logInfo("====================\n");
     }
 
     private boolean isPOSConnected(byte[] terminalId) {

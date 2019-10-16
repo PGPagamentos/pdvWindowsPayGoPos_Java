@@ -8,6 +8,11 @@ class PTILib {
     private static final String LIB_NAME = "PTI_DLL.dll";
     private PTILibMap libInterface;
 
+    static {
+        System.setProperty("jna.debug_load", "true");
+        System.setProperty("jna.debug_load.jna", "true");
+    }
+
     PTILib() {
         Native.setProtected(true);
         this.libInterface = Native.load(LIB_NAME, PTILibMap.class);
