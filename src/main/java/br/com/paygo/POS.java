@@ -381,13 +381,15 @@ public class POS implements Runnable {
         ShortByReference returnedCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
         ShortByReference optionSelected;
 
-        LibFunctions.createMenu(terminalId, returnedCode);
-
-        LibFunctions.addMenuOption(terminalId, "QR Code", returnedCode);
-        LibFunctions.addMenuOption(terminalId, "Cod Barras", returnedCode);
-        LibFunctions.addMenuOption(terminalId, "Retornar", returnedCode);
+        LibFunctions.clearKeys(terminalId, returnedCode);
 
         do {
+            LibFunctions.createMenu(terminalId, returnedCode);
+
+            LibFunctions.addMenuOption(terminalId, "QR Code", returnedCode);
+            LibFunctions.addMenuOption(terminalId, "Cod Barras", returnedCode);
+            LibFunctions.addMenuOption(terminalId, "Retornar", returnedCode);
+
             optionSelected = new ShortByReference((short) -1);
 
             LibFunctions.displayMenu(terminalId, "Selecione uma opcao:", 30, optionSelected, returnedCode);
