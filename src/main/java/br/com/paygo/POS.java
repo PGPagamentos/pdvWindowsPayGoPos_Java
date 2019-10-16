@@ -6,6 +6,9 @@ import br.com.paygo.interop.LibFunctions;
 import br.com.paygo.ui.UserInterface;
 import com.sun.jna.ptr.ShortByReference;
 
+/**
+ * Classe responsável por executar a thread que gerencia um POS conectado à aplicação.
+ */
 public class POS implements Runnable {
 
     private static final ShortByReference defaultKey = new ShortByReference(PTIKey.KEY_FUNC2.getValue());
@@ -26,7 +29,7 @@ public class POS implements Runnable {
     }
 
     /**
-     * Método que fica aguardando a conexão dos terminais
+     * Método que fica aguardando a interação do POS recém conectado para iniciar a exibição de informações.
      */
     private void waitAction() {
         ShortByReference returnedCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
@@ -55,7 +58,7 @@ public class POS implements Runnable {
 
         LibFunctions.displayMessage(terminalId, "DESCONECTANDO POS", returnedCode);
 
-        userInterface.logInfo("...\nDESCONECTANDO (TERMINAL " + terminalId + ")\n...");
+        userInterface.logInfo("...\nDESCONECTANDO (TERMINAL " + Printer.format(terminalId) + ")\n...");
 
         LibFunctions.disconnect(terminalId, 5, returnedCode);
         userInterface.logInfo("=> PTI_Disconnect: " + returnedCode.getValue());
@@ -64,7 +67,7 @@ public class POS implements Runnable {
             PTI.connectedPOS.remove(new String(this.terminalId));
         }
 
-        System.out.println(PTI.connectedPOS.size());
+        System.out.println("Terminais conectados: " + PTI.connectedPOS.size());
     }
 
     /**
@@ -159,7 +162,6 @@ public class POS implements Runnable {
 
     private void sale() {
         ShortByReference returnedCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
-        ShortByReference optionSelected = new ShortByReference((short)-1);
         byte[] saleValue = new byte[1000];
 
         System.out.println("DIGITE VALOR PAGAMENTO");
@@ -336,7 +338,7 @@ public class POS implements Runnable {
                             LibFunctions.displayMessage(terminalId, "IMPRESSORA SEM\rPAPEL!", returnedCode);
                             userInterface.logInfo("Impressora sem papel");
                         } else if (returnedCode.getValue() == PTIRet.INTERNALERR.getValue()) {
-                                LibFunctions.displayMessage(terminalId, "ERRO INTERNO!", returnedCode);
+                            LibFunctions.displayMessage(terminalId, "ERRO INTERNO!", returnedCode);
                             userInterface.logInfo("Erro interno da biblioteca de integração");
                         }
 
@@ -368,8 +370,7 @@ public class POS implements Runnable {
 
                         return 0;
                     case 3: // Opções de impressão de código de barras e QR
-                        symbolsMenu();
-                        return 0;
+                        return symbolsMenu();
                 }
             }
         } while (optionSelected.getValue() != 4);
@@ -377,6 +378,9 @@ public class POS implements Runnable {
         return 0;
     }
 
+    /**
+     * Exibe o submenu para seleção do tipo de impressão: QR Code ou Cód. Barras
+     */
     private int symbolsMenu() {
         ShortByReference returnedCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
         ShortByReference optionSelected;
@@ -420,6 +424,9 @@ public class POS implements Runnable {
         return 0;
     }
 
+    /**
+     * Busca todas as informações de resultados disponíveis no momento
+     */
     private void printResultParams() {
         ShortByReference returnedCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
         byte[] value;
@@ -459,10 +466,10 @@ public class POS implements Runnable {
 
         if (optionSelected.getValue() == 0) {
             LibFunctions.confirmTransaction(terminalId, PTICnf.SUCCESS, returnedCode);
-            userInterface.logInfo("CONFIRMAÇÃO - SUCCESS: " + returnedCode);
+            userInterface.logInfo("CONFIRMAÇÃO - SUCCESS: " + returnedCode.getValue());
         } else {
             LibFunctions.confirmTransaction(terminalId, PTICnf.OTHERERR, returnedCode);
-            userInterface.logInfo("CONFIRMAÇÃO - OTHERERR: " + returnedCode);
+            userInterface.logInfo("CONFIRMAÇÃO - OTHERERR: " + returnedCode.getValue());
         }
     }
 

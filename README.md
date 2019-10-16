@@ -19,6 +19,20 @@ Ao executar a aplicação, será utilizado o mesmo diretório do projeto para sa
 
 ---
 
+## Funcionalidades Implementadas Neste Exemplo:
+
+- Inicialização - Configura Biblioteca de Integração;
+- Conexão com múltiplos POS;
+- Identificação do terminal conectado;
+- Exibição de mensagens customizadas no display do POS;
+- Menus e submenus de operações;
+- Captura de dados do usuário (com e sem máscara);
+- Emissão de QR Code e Código de Barras;
+- Fluxo de venda e confirmação de transação (REDE, BIN e CIELO);
+- Cancelamento de transações.
+
+---
+
 ## Mais informações
 
 - [Site Pay&Go](https://www.paygo.com.br)

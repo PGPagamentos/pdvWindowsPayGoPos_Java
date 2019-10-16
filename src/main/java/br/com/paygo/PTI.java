@@ -9,6 +9,9 @@ import com.sun.jna.ptr.ShortByReference;
 
 import java.util.ArrayList;
 
+/**
+ * Classe responsável por executar a thread que ficará aguardando as conexões de POS.
+ */
 public class PTI implements Runnable {
 
     private static final String COMPANY = "NTK SOLUTIONS";
@@ -54,12 +57,15 @@ public class PTI implements Runnable {
                 do {
                     LibFunctions.connectionLoop(terminalId, model, mac, serialNumber, connectionCode);
 
+//                   Ao identificar uma nova tentativa de conexão, a aplicação verifica se o terminal já está conectado.
+//                    Caso contrário, a thread responsável por gerenciar o terminal conectado será iniciada.
                     if (connectionCode.getValue() == PTIRet.NEWCONN.getValue()) {
                         userInterface.logInfo("=> ConnectionLoop: " + connectionCode.getValue());
 
                         if (!isPOSConnected(terminalId)) {
                             POS pos = new POS(userInterface, terminalId, model, mac, serialNumber);
 
+//                            Inicia execução no terminal recém conectado
                             Thread posThread = new Thread(pos);
                             posThread.start();
 
@@ -90,6 +96,9 @@ public class PTI implements Runnable {
         }
     }
 
+    /**
+     * Exibe no log da aplicação as informações gerais da aplicação.
+     */
     private void logApplicationInfo() {
         userInterface.logInfo("\n======= INFO =======");
         userInterface.logInfo("COMPANY: " + COMPANY);
