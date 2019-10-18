@@ -21,7 +21,7 @@ public class PTI implements Runnable {
     private static final short PORT = 10000;
     private static final short MAX_TERMINALS = 50;
     private static final String WAIT_MESSAGE = "APLICACAO EXEMPLO";
-    private static final short TIMEOUT = 0;
+    private static final short TIMEOUT = 30;
 
     private final UserInterface userInterface;
 
@@ -47,7 +47,7 @@ public class PTI implements Runnable {
 
             LibFunctions.init(COMPANY, VERSION, CAPABILITIES, WORKING_DIR, PORT, MAX_TERMINALS, WAIT_MESSAGE, TIMEOUT, returnedCode);
 
-            userInterface.logInfo("=> Init");
+            userInterface.logInfo("=> PTI_Init");
 
             logApplicationInfo();
 
@@ -60,7 +60,7 @@ public class PTI implements Runnable {
 //                   Ao identificar uma nova tentativa de conexão, a aplicação verifica se o terminal já está conectado.
 //                    Caso contrário, a thread responsável por gerenciar o terminal conectado será iniciada.
                     if (connectionCode.getValue() == PTIRet.NEWCONN.getValue()) {
-                        userInterface.logInfo("=> ConnectionLoop: " + connectionCode.getValue());
+                        System.out.println("=> ConnectionLoop: " + connectionCode.getValue());
 
                         if (!isPOSConnected(terminalId)) {
                             POS pos = new POS(userInterface, terminalId, model, mac, serialNumber);
@@ -82,11 +82,11 @@ public class PTI implements Runnable {
                     connectedPOS.forEach(terminalId -> LibFunctions.disconnect(((String)terminalId).getBytes(), 1, returnedCode));
                 }
 
-                Thread.sleep(2000);
+                Thread.sleep(1000);
 
-                userInterface.logInfo("Encerrando comunicação com a Biblioteca");
                 LibFunctions.end();
                 userInterface.logInfo("=> PTI_End");
+                userInterface.logInfo("Comunicação com a biblioteca foi encerrada.");
             } else {
                 System.out.println("Exit");
                 System.exit(-1);

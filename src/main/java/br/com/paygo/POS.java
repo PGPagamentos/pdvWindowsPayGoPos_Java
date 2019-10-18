@@ -35,33 +35,26 @@ public class POS implements Runnable {
         ShortByReference returnedCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
         ShortByReference status = new ShortByReference((short)-1);
 
-        LibFunctions.displayMessage(terminalId, "TERMINAL CONECTADO!\rID: " + Printer.format(terminalId), returnedCode);
-        userInterface.logInfo("=> DisplayMessage: " + returnedCode.getValue());
+        LibFunctions.displayMessage(terminalId, "TERMINAL CONECTADO!\rID: " + Printer.format(terminalId) + "\r\rPRESSIONE OK", returnedCode);
+        System.out.println("=> DisplayMessage: " + returnedCode.getValue());
 
         userInterface.logInfo("Terminal Conectado: " + Printer.format(terminalId));
 
-        userInterface.logInfo("Pressione OK...");
-        LibFunctions.waitKeyPress(terminalId, 10, defaultKey, returnedCode);
-        userInterface.logInfo("=> WaitKeyPress: " + returnedCode.getValue());
-
-        LibFunctions.checkStatus(terminalId, status, model, mac, serialNumber, returnedCode);
-        userInterface.logInfo("=> CheckStatus: " + returnedCode.getValue());
-
-        LibFunctions.displayMessage(terminalId, "SERIAL: " + Printer.format(serialNumber) + "\rMAC: " + Printer.format(mac) + "\rMODELO: " + Printer.format(model) + "\rSTATUS: " + status, returnedCode);
-        userInterface.logInfo("=> DisplayMessage: " + returnedCode.getValue());
-
         System.out.println("Pressione OK...");
         LibFunctions.waitKeyPress(terminalId, 10, defaultKey, returnedCode);
-        userInterface.logInfo("=> WaitKeyPress: " + returnedCode.getValue());
+        System.out.println("=> WaitKeyPress: " + returnedCode.getValue());
+
+        LibFunctions.checkStatus(terminalId, status, model, mac, serialNumber, returnedCode);
+        System.out.println("=> CheckStatus: " + returnedCode.getValue());
 
         displayMainMenu();
 
-        LibFunctions.displayMessage(terminalId, "DESCONECTANDO POS", returnedCode);
+        LibFunctions.displayMessage(terminalId, "DESCONECTANDO TERMINAL", returnedCode);
 
-        userInterface.logInfo("...\nDESCONECTANDO (TERMINAL " + Printer.format(terminalId) + ")\n...");
+        userInterface.logInfo("...\nDESCONECTANDO (TERMINAL " + Printer.format(terminalId) + ")...\n");
 
-        LibFunctions.disconnect(terminalId, 5, returnedCode);
-        userInterface.logInfo("=> PTI_Disconnect: " + returnedCode.getValue());
+        LibFunctions.disconnect(terminalId, 0, returnedCode);
+        System.out.println("=> PTI_Disconnect: " + returnedCode.getValue());
 
         if (returnedCode.getValue() == PTIRet.OK.getValue()) {
             PTI.connectedPOS.remove(new String(this.terminalId));
@@ -86,15 +79,13 @@ public class POS implements Runnable {
             LibFunctions.addMenuOption(terminalId, "Operacoes", returnedCode);
             LibFunctions.addMenuOption(terminalId, "Captura de Dados", returnedCode);
             LibFunctions.addMenuOption(terminalId, "Impressao", returnedCode);
-            LibFunctions.addMenuOption(terminalId, "Desconectar", returnedCode);
 
             LibFunctions.clearKeys(terminalId, returnedCode);
 
             LibFunctions.displayMenu(terminalId, "Selecione uma opcao:", 30, optionSelected, returnedCode);
 
             if (returnedCode.getValue() == PTIRet.TIMEOUT.getValue()) {
-                timeoutAction();
-                optionSelected = new ShortByReference((short)3);
+                actionCode = timeoutAction();
             }
 
             switch (optionSelected.getValue()) {
@@ -111,7 +102,7 @@ public class POS implements Runnable {
                     actionCode = menuPrint();
                     break;
             }
-        } while (optionSelected.getValue() != 3 && actionCode != 1);
+        } while (actionCode != 1);
     }
 
     /**
@@ -139,21 +130,25 @@ public class POS implements Runnable {
 
             if (returnedCode.getValue() == PTIRet.TIMEOUT.getValue()) {
                 return timeoutAction();
-            } else {
-                switch (optionSelected.getValue()) {
-                    case 0:
-                        System.out.println("=== VENDA ===");
-                        sale();
-                        return 1;
-                    case 1:
-                        System.out.println("=== SALEVOID ===");
-                        saleVoid();
-                        return 1;
-                    case 2:
-                        System.out.println("=== ADMIN ===");
-                        admin();
-                        break;
-                }
+            }
+
+            if (returnedCode.getValue() == PTIRet.CANCEL.getValue()) {
+                return 0;
+            }
+
+            switch (optionSelected.getValue()) {
+                case 0:
+                    System.out.println("\t=== VENDA ===");
+                    sale();
+                    return 0;
+                case 1:
+                    System.out.println("\t=== SALEVOID ===");
+                    saleVoid();
+                    return 0;
+                case 2:
+                    System.out.println("\t=== ADMIN ===");
+                    admin();
+                    return 0;
             }
         } while (optionSelected.getValue() != 3);
 
@@ -164,41 +159,45 @@ public class POS implements Runnable {
         ShortByReference returnedCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
         byte[] saleValue = new byte[1000];
 
-        System.out.println("DIGITE VALOR PAGAMENTO");
+        System.out.println("\t\tINFORME VALOR DO PAGAMENTO");
 
-        LibFunctions.getData(terminalId, "DIGITE VALOR PAGAMENTO", "@@@.@@@,@@",
+        LibFunctions.getData(terminalId, "VALOR DO PAGAMENTO\r", "@@@.@@@,@@",
                 3, 8, false, false, false,
-                30, saleValue, 3, returnedCode);
+                30, saleValue, 2, returnedCode);
 
-        userInterface.logInfo("=> PTI_GetData: " + returnedCode.getValue());
+        System.out.println("\t\t=> PTI_GetData: " + returnedCode.getValue());
 
         LibFunctions.startTransaction(terminalId, PWOper.SALE, returnedCode);
 
         LibFunctions.addParam(terminalId, PWInfo.TOTAMNT, saleValue, returnedCode);
         LibFunctions.addParam(terminalId, PWInfo.CURRENCY, "986", returnedCode);
 
-        userInterface.logInfo("VALOR INFORMADO = " + Printer.format(saleValue) + " (TERMINAL = " + Printer.format(terminalId) + ")");
+        System.out.println("\t\tVALOR INFORMADO = " + Printer.format(saleValue) + " (TERMINAL = " + Printer.format(terminalId) + ")");
 
         LibFunctions.executeTransaction(terminalId, returnedCode);
 
-        userInterface.logInfo("=> PTI_EFT_Exec: " + returnedCode.getValue());
+        System.out.println("\t\t=> PTI_EFT_Exec: " + returnedCode.getValue());
 
         if (returnedCode.getValue() == PTIRet.OK.getValue()) {
             printResultParams();
 
-            LibFunctions.printCodeBar(terminalId, "0123456789", 2, returnedCode); // código de barras
-            LibFunctions.printCodeBar(terminalId, "http://www.ntk.com.br", 4, returnedCode); // qrcode
-            LibFunctions.printEmptySpace(terminalId, returnedCode);
             LibFunctions.printReceipt(terminalId, 3, returnedCode);
 
+            if (returnedCode.getValue() == PTIRet.NOPAPER.getValue()) {
+                System.out.println("\n\n\tIMPRESSORA SEM PAPEL\n");
+            }
+
             LibFunctions.beep(terminalId, PTIBeep.OK, returnedCode);
+
+            this.logReceipts();
         } else {
             byte[] value = new byte[1000];
 
             LibFunctions.beep(terminalId, PTIBeep.OK, returnedCode);
             LibFunctions.getInfo(terminalId, PWInfo.RESULTMSG, value, returnedCode);
 
-            userInterface.logInfo("RESULTMSG = " + Printer.format(value));
+            userInterface.logInfo("ERRO: " + Printer.format(value));
+            System.out.println("\t\tRESULTMSG = " + Printer.format(value));
         }
 
         confirmation();
@@ -219,6 +218,8 @@ public class POS implements Runnable {
 
             LibFunctions.beep(terminalId, PTIBeep.OK, returnedCode);
 
+            logReceipts();
+
             LibFunctions.clearKeys(terminalId, returnedCode);
 
             LibFunctions.createMenu(terminalId, returnedCode);
@@ -234,8 +235,8 @@ public class POS implements Runnable {
                 LibFunctions.confirmTransaction(terminalId, PTICnf.OTHERERR, returnedCode);
             }
         } else {
-            userInterface.logInfo("Operação foi cancelada ou falhou");
-            userInterface.logInfo("CÓDIGO RETORNADO: " + returnedCode);
+            System.out.println("Operação foi cancelada ou falhou");
+            System.out.println("CÓDIGO RETORNADO: " + returnedCode.getValue());
 
             LibFunctions.beep(terminalId, PTIBeep.ERROR, returnedCode);
         }
@@ -248,13 +249,22 @@ public class POS implements Runnable {
 
         LibFunctions.executeTransaction(terminalId, returnedCode);
 
-        userInterface.logInfo("=> PTI_EFT_Exec: " + returnedCode.getValue());
+        System.out.println("\t\t=> PTI_EFT_Exec: " + returnedCode.getValue());
 
         // Não retornou OK, vai para a confirmação. Pode existir alguma transação pendente ou com erro.
         if (returnedCode.getValue() != PTIRet.OK.getValue()) {
-            userInterface.logInfo("RETORNO DA OPERAÇÃO: " + returnedCode);
+            System.out.println("\t\tRETORNO DA OPERAÇÃO: " + returnedCode.getValue());
             confirmation();
+        } else {
+            LibFunctions.printReceipt(terminalId, 3, returnedCode);
+            System.out.println("\t\t=> PTI_EFT_PrintReceipt: " + returnedCode.getValue());
         }
+
+        byte[] value = new byte[1000];
+
+        LibFunctions.getInfo(terminalId, PWInfo.OPERATION, value, returnedCode);
+
+        LibFunctions.printContent(terminalId, value, returnedCode);
     }
 
     /**
@@ -279,22 +289,34 @@ public class POS implements Runnable {
 
             if (returnedCode.getValue() == PTIRet.TIMEOUT.getValue()) {
                 return timeoutAction();
-            } else if (optionSelected.getValue() == 0) {
-                LibFunctions.getData(terminalId, "CPF C/ MASCARA", "@@@.@@@.@@@-@@",
-                        11, 11, true, false, true,
-                        30, value, 3, returnedCode);
+            }
+
+            if (returnedCode.getValue() == PTIRet.CANCEL.getValue()) {
+                return 0;
+            }
+
+            if (optionSelected.getValue() == 0) {
+                System.out.println("\t=== CPF C/ MASCARA ===");
+                LibFunctions.getData(terminalId, "CPF C/ MASCARA\r", "@@@.@@@.@@@-@@",
+                        11, 11, false, false, true,
+                        30, value, 2, returnedCode);
 
                 userInterface.logInfo("CPF com máscara capturado: " + Printer.format(value)  + " (TERMINAL = " + Printer.format(terminalId) + ")");
 
                 LibFunctions.waitKeyPress(terminalId, 5, defaultKey, returnedCode);
+
+                return 0;
             } else if (optionSelected.getValue() == 1) {
-                LibFunctions.getData(terminalId, "CPF S/ MASCARA", "",
-                        11, 11, true, false, false,
-                        30, value, 3, returnedCode);
+                System.out.println("\t=== CPF S/ MASCARA ===");
+                LibFunctions.getData(terminalId, "CPF S/ MASCARA\r", "@@@.@@@.@@@-@@",
+                        11, 11, false, false, false,
+                        30, value, 2, returnedCode);
 
                 userInterface.logInfo("CPF sem máscara capturado: " + Printer.format(value)  + " (TERMINAL = " + Printer.format(terminalId) + ")");
 
                 LibFunctions.waitKeyPress(terminalId, 5, defaultKey, returnedCode);
+
+                return 0;
             }
         } while (optionSelected.getValue() != 2);
 
@@ -316,7 +338,7 @@ public class POS implements Runnable {
             LibFunctions.addMenuOption(terminalId, "PrintReceipt", returnedCode);
             LibFunctions.addMenuOption(terminalId, "Display", returnedCode);
             LibFunctions.addMenuOption(terminalId, "Print", returnedCode);
-            LibFunctions.addMenuOption(terminalId, "PrnSymbolcode", returnedCode);
+            LibFunctions.addMenuOption(terminalId, "PrnSymbolCode", returnedCode);
             LibFunctions.addMenuOption(terminalId, "Retornar", returnedCode);
 
             optionSelected = new ShortByReference((short)-1);
@@ -325,53 +347,61 @@ public class POS implements Runnable {
 
             if (returnedCode.getValue() == PTIRet.TIMEOUT.getValue()) {
                 return timeoutAction();
-            } else {
-                switch (optionSelected.getValue()) {
-                    case 0: // Impressão de recibo da venda
-                        LibFunctions.printReceipt(terminalId, 3, returnedCode);
-                        userInterface.logInfo("=> PTI_EFT_PrintReceipt: " + returnedCode.getValue());
+            }
 
-                        if (returnedCode.getValue() == PTIRet.NODATA.getValue()) {
-                            LibFunctions.displayMessage(terminalId, "SEM RECECIBO\rPARA IMPRIMIR!", returnedCode);
-                            userInterface.logInfo("Não existe recibo a ser impresso");
-                        } else if (returnedCode.getValue() == PTIRet.NOPAPER.getValue()) {
-                            LibFunctions.displayMessage(terminalId, "IMPRESSORA SEM\rPAPEL!", returnedCode);
-                            userInterface.logInfo("Impressora sem papel");
-                        } else if (returnedCode.getValue() == PTIRet.INTERNALERR.getValue()) {
-                            LibFunctions.displayMessage(terminalId, "ERRO INTERNO!", returnedCode);
-                            userInterface.logInfo("Erro interno da biblioteca de integração");
-                        }
+            if (returnedCode.getValue() == PTIRet.CANCEL.getValue()) {
+                return 0;
+            }
 
-                        return 0;
-                    case 1: // Exibe mensagem na tela do equipamento
-                        LibFunctions.displayMessage(terminalId, "Exibindo mensagem...", returnedCode);
-                        try {
-                            Thread.sleep(3000);
-                        } catch (InterruptedException ignore) {}
-                        return 0;
-                    case 2: // Imprime um texto digitado pelo usuário
-                        byte[] printValue = new byte[1000];
+            switch (optionSelected.getValue()) {
+                case 0: // Impressão de recibo da venda
+                    System.out.println("\t=== PrintReceipt ===");
+                    LibFunctions.printReceipt(terminalId, 3, returnedCode);
+                    System.out.println("\t\t=> PTI_EFT_PrintReceipt: " + returnedCode.getValue());
 
-                        LibFunctions.getData(terminalId, "TEXTO PARA IMPRIMIR\r", "@@@@@@",
-                                1, 6, false, true, false,
-                                30, printValue, 2, returnedCode);
+                    if (returnedCode.getValue() == PTIRet.NODATA.getValue()) {
+                        LibFunctions.displayMessage(terminalId, "SEM RECECIBO\rPARA IMPRIMIR!", returnedCode);
+                        userInterface.logInfo("Não existe recibo a ser impresso");
+                    } else if (returnedCode.getValue() == PTIRet.NOPAPER.getValue()) {
+                        LibFunctions.displayMessage(terminalId, "IMPRESSORA SEM\rPAPEL!", returnedCode);
+                        userInterface.logInfo("Impressora sem papel");
+                    } else if (returnedCode.getValue() == PTIRet.INTERNALERR.getValue()) {
+                        LibFunctions.displayMessage(terminalId, "ERRO INTERNO!", returnedCode);
+                        userInterface.logInfo("Erro interno da biblioteca de integração");
+                    }
 
-                        userInterface.logInfo("=> PTI_GetData: " + returnedCode.getValue());
-                        userInterface.logInfo("TEXTO INFORMADO = " + Printer.format(printValue) + " (TERMINAL = " + Printer.format(terminalId) + ")");
+                    return 0;
+                case 1: // Exibe mensagem na tela do equipamento
+                    System.out.println("\t=== Display ===");
+                    LibFunctions.displayMessage(terminalId, "Exibindo mensagem...", returnedCode);
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException ignore) {}
+                    return 0;
+                case 2: // Imprime um texto digitado pelo usuário
+                    System.out.println("\t=== Print ===");
+                    byte[] printValue = new byte[1000];
 
-                        LibFunctions.printContent(terminalId, "TEXTO INFORMADO: ".getBytes(), returnedCode);
-                        userInterface.logInfo("=> PTI_Print: " + returnedCode.getValue());
+                    LibFunctions.getData(terminalId, "TEXTO PARA IMPRIMIR\r", "@@@@@@",
+                            1, 6, false, true, false,
+                            30, printValue, 2, returnedCode);
 
-                        LibFunctions.printContent(terminalId, printValue, returnedCode);
-                        userInterface.logInfo("=> PTI_Print: " + returnedCode.getValue());
+                    System.out.println("\t\t=> PTI_GetData: " + returnedCode.getValue());
+                    userInterface.logInfo("TEXTO INFORMADO = " + Printer.format(printValue) + " (TERMINAL = " + Printer.format(terminalId) + ")");
 
-                        LibFunctions.printEmptySpace(terminalId, returnedCode);
-                        userInterface.logInfo("=> PTI_EFT_PrintReceipt: " + returnedCode.getValue());
+                    LibFunctions.printContent(terminalId, "TEXTO INFORMADO: ".getBytes(), returnedCode);
+                    System.out.println("\t\t=> PTI_Print: " + returnedCode.getValue());
 
-                        return 0;
-                    case 3: // Opções de impressão de código de barras e QR
-                        return symbolsMenu();
-                }
+                    LibFunctions.printContent(terminalId, printValue, returnedCode);
+                    System.out.println("\t\t=> PTI_Print: " + returnedCode.getValue());
+
+                    LibFunctions.printEmptySpace(terminalId, returnedCode);
+                    System.out.println("\t\t=> PTI_EFT_PrintReceipt: " + returnedCode.getValue());
+
+                    return 0;
+                case 3: // Opções de impressão de código de barras e QR
+                    System.out.println("\t=== PrnSymbolCode ===");
+                    return symbolsMenu();
             }
         } while (optionSelected.getValue() != 4);
 
@@ -391,7 +421,7 @@ public class POS implements Runnable {
             LibFunctions.createMenu(terminalId, returnedCode);
 
             LibFunctions.addMenuOption(terminalId, "QR Code", returnedCode);
-            LibFunctions.addMenuOption(terminalId, "Cod Barras", returnedCode);
+            LibFunctions.addMenuOption(terminalId, "Codigo de Barras", returnedCode);
             LibFunctions.addMenuOption(terminalId, "Retornar", returnedCode);
 
             optionSelected = new ShortByReference((short) -1);
@@ -400,24 +430,28 @@ public class POS implements Runnable {
 
             if (returnedCode.getValue() == PTIRet.TIMEOUT.getValue()) {
                 return timeoutAction();
-            } else {
-                if (optionSelected.getValue() == 0) {
-                    System.out.println("Imprimindo QR Code");
+            }
 
-                    LibFunctions.printCodeBar(terminalId, "http://www.ntk.com.br", 4, returnedCode);
+            if (returnedCode.getValue() == PTIRet.CANCEL.getValue()) {
+                return 0;
+            }
 
-                    LibFunctions.printEmptySpace(terminalId, returnedCode);
+            if (optionSelected.getValue() == 0) {
+                System.out.println("\t\t=== QR Code ===");
 
-                    return 0;
-                } else if (optionSelected.getValue() == 1) {
-                    System.out.println("Imprimindo Cod. Barras");
+                LibFunctions.printCodeBar(terminalId, "http://www.ntk.com.br", 4, returnedCode);
 
-                    LibFunctions.printCodeBar(terminalId, "0123456789", 2, returnedCode);
+                LibFunctions.printEmptySpace(terminalId, returnedCode);
 
-                    LibFunctions.printEmptySpace(terminalId, returnedCode);
+                return 0;
+            } else if (optionSelected.getValue() == 1) {
+                System.out.println("\t\t=== Codigo de Barras ===");
 
-                    return 0;
-                }
+                LibFunctions.printCodeBar(terminalId, "0123456789", 2, returnedCode);
+
+                LibFunctions.printEmptySpace(terminalId, returnedCode);
+
+                return 0;
             }
         } while (optionSelected.getValue() != 2);
 
@@ -425,34 +459,10 @@ public class POS implements Runnable {
     }
 
     /**
-     * Busca todas as informações de resultados disponíveis no momento
-     */
-    private void printResultParams() {
-        ShortByReference returnedCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
-        byte[] value;
-
-        userInterface.logInfo("===== PARÂMETROS DA APLICAÇÃO =====");
-
-        for (PWInfo info : PWInfo.values()) {
-             value = new byte[1000];
-
-            if (info != PWInfo.UNKNOWN) {
-                LibFunctions.getInfo(terminalId, info, value, returnedCode);
-                String result = info + " = " + Printer.format(value);
-                LibFunctions.printContent(terminalId, result.getBytes(), returnedCode);
-                userInterface.logInfo("=> PTI_Print:" + returnedCode.getValue());
-                userInterface.logInfo(info + " = " + Printer.format(value));
-            }
-        }
-
-        userInterface.logInfo("===================================");
-    }
-
-    /**
      * Método responsável por executar o fluxo de confirmação de uma transação
      */
     private void confirmation() {
-        userInterface.logInfo("=== CONFIRMAÇÃO DE TRANSAÇÃO ===");
+        System.out.println("=== CONFIRMAÇÃO DE TRANSAÇÃO ===");
         ShortByReference returnedCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
         LibFunctions.clearKeys(terminalId, returnedCode);
         ShortByReference optionSelected = new ShortByReference((short) -1);
@@ -466,10 +476,14 @@ public class POS implements Runnable {
 
         if (optionSelected.getValue() == 0) {
             LibFunctions.confirmTransaction(terminalId, PTICnf.SUCCESS, returnedCode);
-            userInterface.logInfo("CONFIRMAÇÃO - SUCCESS: " + returnedCode.getValue());
+            System.out.println("CONFIRMAÇÃO - SUCCESS: " + returnedCode.getValue());
+
+            LibFunctions.displayMessage(terminalId, "TRANSACAO CONFIRMADA!", returnedCode);
         } else {
             LibFunctions.confirmTransaction(terminalId, PTICnf.OTHERERR, returnedCode);
-            userInterface.logInfo("CONFIRMAÇÃO - OTHERERR: " + returnedCode.getValue());
+            System.out.println("CONFIRMAÇÃO - OTHERERR: " + returnedCode.getValue());
+
+            LibFunctions.displayMessage(terminalId, "TRANSACAO NAO CONFIRMADA!", returnedCode);
         }
     }
 
@@ -478,9 +492,52 @@ public class POS implements Runnable {
 
         LibFunctions.displayMessage(terminalId, "TEMPO DE ESPERA\rESGOTADO!", returnedCode);
 
-        LibFunctions.waitKeyPress(terminalId, 10, defaultKey, returnedCode);
+        LibFunctions.waitKeyPress(terminalId, 5, defaultKey, returnedCode);
 
         return 1;
+    }
+
+    private void logReceipts() {
+        ShortByReference returnedCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
+        byte[] value = new byte[1000];
+
+        LibFunctions.getInfo(terminalId, PWInfo.RCPTMERCH, value, returnedCode);
+
+        if(returnedCode.getValue() == PTIRet.OK.getValue()) {
+            userInterface.logInfo(PWInfo.RCPTMERCH + " = " + Printer.format(value));
+        }
+
+        value = new byte[1000];
+
+        LibFunctions.getInfo(terminalId, PWInfo.RCPTCHOLDER, value, returnedCode);
+
+        if(returnedCode.getValue() == PTIRet.OK.getValue()) {
+            userInterface.logInfo(PWInfo.RCPTCHOLDER + " = " + Printer.format(value));
+        }
+    }
+
+    /**
+     * Busca todas as informações de resultados disponíveis no momento
+     */
+    private void printResultParams() {
+        ShortByReference returnedCode = new ShortByReference(PTIRet.INTERNAL_ERR.getValue());
+        byte[] value;
+
+        System.out.println("===== PARÂMETROS DA APLICAÇÃO =====");
+
+        for (PWInfo info : PWInfo.values()) {
+            value = new byte[1000];
+
+            if (info != PWInfo.UNKNOWN) {
+                LibFunctions.getInfo(terminalId, info, value, returnedCode);
+
+                if(returnedCode.getValue() == PTIRet.OK.getValue()) {
+                    System.out.println(info + " = " + Printer.format(value));
+                }
+            }
+        }
+
+        System.out.println("===================================");
     }
 
     String getTerminalId() {
@@ -489,7 +546,6 @@ public class POS implements Runnable {
 
     @Override
     public void run() {
-        userInterface.logInfo("RUNNING (TERMINAL " + Printer.format(terminalId) + ")");
         waitAction();
     }
 }

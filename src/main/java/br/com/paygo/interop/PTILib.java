@@ -65,8 +65,8 @@ class PTILib {
     void getData(byte[] terminalId, byte[] promptMessage, byte[] format, short minLength, short maxLength,
                  int startFromLeft, int alphanumericCharacters, int hasMask,
                  short timeout, byte[] data, short startLine, ShortByReference ret) {
-        libInterface.PTI_GetData(terminalId, promptMessage, format, minLength, maxLength, 0,
-                0, 0, timeout, data, startLine, ret);
+        libInterface.PTI_GetData(terminalId, promptMessage, format, minLength, maxLength, startFromLeft,
+                alphanumericCharacters, hasMask, timeout, data, startLine, ret);
     }
 
     void startTransaction(byte[] terminalId, short operation, ShortByReference ret) {
