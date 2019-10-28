@@ -259,6 +259,12 @@ public class POS implements Runnable {
             LibFunctions.printReceipt(terminalId, 3, returnedCode);
             System.out.println("\t\t=> PTI_EFT_PrintReceipt: " + returnedCode.getValue());
         }
+
+        byte[] value = new byte[1000];
+
+        LibFunctions.getInfo(terminalId, PWInfo.OPERATION, value, returnedCode);
+
+        LibFunctions.printContent(terminalId, value, returnedCode);
     }
 
     /**
