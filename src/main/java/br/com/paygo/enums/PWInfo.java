@@ -54,7 +54,9 @@ public enum PWInfo {
     PNDAUTLOCREF(32520),  //Referência para a infraestrutura Erro! Nome de propriedade do documento desconhecido. da transação que está pendente.
     PNDAUTEXTREF(32521),  //Referência para o Provedor da transação que está pendente.
     DUEAMNT(48902),       //Valor devido pelo usuário, considerando CURREXP, já deduzido em TOTAMNT.
-    READJUSTEDAMNT(48905);//Valor total da transação reajustado, este campo será utilizado caso o autorizador, por alguma regra de negócio específica dele, resolva alterar o valor total que foi solicitado para a transação.
+    READJUSTEDAMNT(48905),//Valor total da transação reajustado, este campo será utilizado caso o autorizador, por alguma regra de negócio específica dele, resolva alterar o valor total que foi solicitado para a transação.
+    CARDNAMESTD(196),   // Descrição do produto bandeira padrão relacionado ao BIN.
+    CHOLDERNAME(7992);  //Nome do portador do cartão utilizado, o tamanho segue o mesmo padrão da tag 5F20 EMV.
 
     private int value;
 
